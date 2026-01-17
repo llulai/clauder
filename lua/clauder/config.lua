@@ -13,7 +13,7 @@ M.defaults = {
   },
   keymaps = {
     ["<CR>"] = { action = "select", desc = "Open diff view" },
-    ["o"] = { action = "select", desc = "Open diff view" },
+    ["o"] = { action = "edit", desc = "Edit file" },
     ["q"] = { action = "close", desc = "Close clauder" },
     ["-"] = { action = "close", desc = "Close clauder" },
     ["R"] = { action = "refresh", desc = "Refresh file list" },

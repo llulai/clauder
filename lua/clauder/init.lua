@@ -51,6 +51,8 @@ function M.open()
 
     if action == "select" then
       callback = actions.select
+    elseif action == "edit" then
+      callback = actions.edit
     elseif action == "close" then
       callback = actions.close
     elseif action == "refresh" then

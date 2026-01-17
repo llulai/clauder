@@ -1,6 +1,6 @@
 ---
 description: Generate conventional commit message from staged changes
-allowed-tools: Bash(git diff:*), Bash(git status:*), Bash(git log:*)
+allowed-tools: Bash(git diff:*), Bash(git status:*), Bash(git log:*), Bash(git commit:*), Bash(git add:*), AskUserQuestion
 ---
 
 Analyze staged changes and propose a commit message.
@@ -14,5 +14,5 @@ Analyze staged changes and propose a commit message.
    - Keep subject line under 72 chars
    - Add body if changes are complex
 5. Present message to user for review
-6. Ask if they want to proceed, modify, or cancel
+6. Use AskUserQuestion tool to ask if they want to proceed, modify, or cancel
 7. Only commit after user approval
