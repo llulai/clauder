@@ -1,0 +1,43 @@
+#!/bin/bash
+# Claude Code hook script that writes session state for dashboard monitoring
+# Receives JSON via stdin from Claude hooks system
+
+INPUT=$(cat)
+HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name')
+CWD=$(echo "$INPUT" | jq -r '.cwd')
+WORKTREE=$(basename "$CWD")
+STATE_DIR="$HOME/.claude-dashboard"
+STATE_FILE="$STATE_DIR/$WORKTREE.json"
+
+mkdir -p "$STATE_DIR"
+
+# Determine state based on hook event
+if [ "$HOOK_EVENT" = "SessionStart" ]; then
+  STATE="working"
+  MSG=""
+elif [ "$HOOK_EVENT" = "Notification" ]; then
+  NTYPE=$(echo "$INPUT" | jq -r '.notification_type')
+  MSG=$(echo "$INPUT" | jq -r '.message')
+  if [ "$NTYPE" = "permission_prompt" ] || [ "$NTYPE" = "idle_prompt" ]; then
+    STATE="waiting_input"
+  else
+    STATE="working"
+  fi
+elif [ "$HOOK_EVENT" = "Stop" ]; then
+  STATE="stopped"
+elif [ "$HOOK_EVENT" = "UserPromptSubmit" ]; then
+  STATE="working"
+  MSG=""
+else
+  STATE="working"
+  MSG=""
+fi
+
+# Write state file
+jq -n \
+  --arg wt "$WORKTREE" \
+  --arg st "$STATE" \
+  --arg msg "${MSG:-}" \
+  --arg cwd "$CWD" \
+  '{worktree: $wt, status: $st, message: $msg, cwd: $cwd, last_update: now | todate}' \
+  > "$STATE_FILE"

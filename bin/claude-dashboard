@@ -1,0 +1,56 @@
+#!/bin/bash
+# Claude session dashboard - fzf picker for tmux worktree sessions
+# Shows which sessions are waiting for input and allows switching
+
+STATE_DIR="$HOME/.claude-dashboard"
+
+# Build list of sessions with status indicators
+selected=$(
+  for f in "$STATE_DIR"/*.json; do
+    [ -f "$f" ] || continue
+    data=$(cat "$f")
+    name=$(echo "$data" | jq -r '.worktree')
+    state=$(echo "$data" | jq -r '.status')
+    msg=$(echo "$data" | jq -r '.message // ""')
+
+    if [ "$state" = "waiting_input" ]; then
+      printf "⚠️  %-20s %s\n" "$name" "$msg"
+    elif [ "$state" = "working" ]; then
+      printf "🔧 %-20s (working)\n" "$name"
+    elif [ "$state" = "stopped" ]; then
+      printf "⏸️  %-20s (stopped)\n" "$name"
+    else
+      printf "   %-20s (%s)\n" "$name" "$state"
+    fi
+  done | fzf --ansi --prompt="Claude Sessions > " --height=40%
+)
+
+[ -z "$selected" ] && exit 0
+
+# Extract worktree name (second field after emoji/spaces)
+worktree=$(echo "$selected" | awk '{print $2}')
+
+# Try to switch to tmux session
+if tmux list-sessions 2>/dev/null | grep -q "^$worktree:"; then
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$worktree"
+  else
+    tmux attach -t "$worktree"
+  fi
+
+  # Find and select the pane running Claude by matching TTY
+  # 1. Find Claude processes and their TTYs
+  claude_ttys=$(ps aux | grep -E "^\S+\s+\S+.*\sclaude(\s|$)" | grep -v grep | awk '{print $7}' | sed 's|^|/dev/tty|')
+
+  # 2. Find pane in this session that matches a Claude TTY
+  for tty in $claude_ttys; do
+    pane_id=$(tmux list-panes -s -t "$worktree" -F "#{pane_id} #{pane_tty}" | grep "$tty" | awk '{print $1}')
+    if [ -n "$pane_id" ]; then
+      tmux select-pane -t "$pane_id"
+      break
+    fi
+  done
+else
+  echo "tmux session '$worktree' not found"
+  exit 1
+fi
