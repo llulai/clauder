@@ -18,3 +18,10 @@ end, {
   range = true,
   desc = "Copy file reference with line numbers to clipboard",
 })
+
+-- Register :ClaudeDashboard command
+vim.api.nvim_create_user_command("ClaudeDashboard", function()
+  require("clauder.dashboard").open()
+end, {
+  desc = "Open Claude session dashboard",
+})

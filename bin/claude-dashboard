@@ -4,12 +4,19 @@
 
 STATE_DIR="$HOME/.claude-dashboard"
 
+# Get list of active tmux sessions (newline-separated)
+ACTIVE_SESSIONS=$(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+
 # Build list of sessions with status indicators
 selected=$(
   for f in "$STATE_DIR"/*.json; do
     [ -f "$f" ] || continue
     data=$(cat "$f")
     name=$(echo "$data" | jq -r '.worktree')
+
+    # Skip if tmux session doesn't exist
+    echo "$ACTIVE_SESSIONS" | grep -q "^${name}$" || continue
+
     state=$(echo "$data" | jq -r '.status')
     msg=$(echo "$data" | jq -r '.message // ""')
 

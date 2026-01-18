@@ -23,6 +23,20 @@ M.defaults = {
   diff = {
     vertical = true,
   },
+  dashboard = {
+    state_dir = "~/.claude-dashboard",
+    keymaps = {
+      ["<CR>"] = { action = "select", desc = "Switch to session" },
+      ["q"] = { action = "close", desc = "Close dashboard" },
+      ["<Esc>"] = { action = "close", desc = "Close dashboard" },
+      ["R"] = { action = "refresh", desc = "Refresh sessions" },
+    },
+    status_icons = {
+      waiting_input = "⚠️",
+      working = "▶",
+      stopped = "⏸",
+    },
+  },
 }
 
 M.options = vim.deepcopy(M.defaults)
